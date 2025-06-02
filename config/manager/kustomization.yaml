@@ -13,5 +13,5 @@ kind: Kustomization
 
 images:
 - name: controller
-  newName: ghcr.io/nutanix-cloud-native/cluster-api-provider-nutanix/controller
-  newTag: latest
+  newName: harbor.eng.nutanix.com/ncn-ci/cluster-api-provider-nutanix
+  newTag: e2e-046a410fb98d1cec8fc792f2ac7559e6b8687617
