@@ -5,6 +5,8 @@ metadata:
 spec:
   kubeadmConfigSpec:
     preKubeadmCommands:
+    - echo "before kubeadm call" > /var/log/prekubeadm.log
+    - hostnamectl set-hostname "{{ ds.meta_data.hostname }}"
     - |
       KUBERNETES_VERSION_NO_V=${KUBERNETES_VERSION#v}
       VERSION_TO_COMPARE=1.33.0
@@ -30,6 +32,8 @@ spec:
   template:
     spec:
       preKubeadmCommands:
+      - echo "before kubeadm call" > /var/log/prekubeadm.log
+      - hostnamectl set-hostname "{{ ds.meta_data.hostname }}"
       - |
         KUBERNETES_VERSION_NO_V=${KUBERNETES_VERSION#v}
         VERSION_TO_COMPARE=1.33.0
