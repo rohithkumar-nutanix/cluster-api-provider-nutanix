@@ -127,11 +127,25 @@ spec:
       - |
         KUBERNETES_VERSION_NO_V=${KUBERNETES_VERSION#v}
         VERSION_TO_COMPARE=1.33.0
-        # Add cloud-provider flag only for Kubernetes versions <= 1.33.0
+        # Add cloud-provider flags for all components only for Kubernetes versions <= 1.33.0
         if [ "$(printf '%s\n' "$VERSION_TO_COMPARE" "$KUBERNETES_VERSION_NO_V" | sort -V | head -n1)" = "$KUBERNETES_VERSION_NO_V" ]; then
           if [ -f /run/kubeadm/kubeadm.yaml ]; then
+            # Update API Server configuration
             sed -i '/apiServer:/,/extraArgs:/s/extraArgs:/extraArgs:\n        cloud-provider: external/' /run/kubeadm/kubeadm.yaml
+            
+            # Update Controller Manager configuration
+            sed -i '/controllerManager:/,/extraArgs:/s/extraArgs:/extraArgs:\n        cloud-provider: external/' /run/kubeadm/kubeadm.yaml
+            
+            # Update initConfiguration for control plane nodes
+            sed -i '/initConfiguration:/,/kubeletExtraArgs:/s/kubeletExtraArgs:/kubeletExtraArgs:\n        cloud-provider: external/' /run/kubeadm/kubeadm.yaml
+            
+            # Update joinConfiguration for worker nodes
+            sed -i '/joinConfiguration:/,/kubeletExtraArgs:/s/kubeletExtraArgs:/kubeletExtraArgs:\n        cloud-provider: external/' /run/kubeadm/kubeadm.yaml
+            
+            echo "Added cloud-provider: external flags to all components for Kubernetes $KUBERNETES_VERSION" >> /var/log/prekubeadm.log
           fi
+        else
+          echo "Skipping cloud-provider flag as Kubernetes version > 1.33.0" >> /var/log/prekubeadm.log
         fi
     postKubeadmCommands:
       - echo export KUBECONFIG=/etc/kubernetes/admin.conf >> /root/.bashrc

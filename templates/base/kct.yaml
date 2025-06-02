@@ -8,7 +8,6 @@ spec:
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            cloud-provider: external
             eviction-hard: nodefs.available<10%,nodefs.inodesFree<5%,imagefs.available<15%,memory.available<100Mi,imagefs.inodesFree<10%
             tls-cipher-suites: ${TLS_CIPHER_SUITES=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256}
       postKubeadmCommands:
@@ -16,6 +15,22 @@ spec:
       preKubeadmCommands:
       - echo "before kubeadm call" > /var/log/prekubeadm.log
       - hostnamectl set-hostname "{{ ds.meta_data.hostname }}"
+      - |
+        KUBERNETES_VERSION_NO_V=${KUBERNETES_VERSION#v}
+        VERSION_TO_COMPARE=1.33.0
+        # Add cloud-provider flag only for Kubernetes versions <= 1.33.0
+        if [ "$(printf '%s\n' "$VERSION_TO_COMPARE" "$KUBERNETES_VERSION_NO_V" | sort -V | head -n1)" = "$KUBERNETES_VERSION_NO_V" ]; then
+          echo "Setting cloud-provider: external for kubelet (k8s version: $KUBERNETES_VERSION)" >> /var/log/prekubeadm.log
+          # Add the flag directly to kubelet service
+          if [ -d /etc/systemd/system ]; then
+            mkdir -p /etc/systemd/system/kubelet.service.d
+            echo "[Service]" > /etc/systemd/system/kubelet.service.d/20-cloud-provider.conf
+            echo "Environment=\"KUBELET_EXTRA_ARGS=--cloud-provider=external\"" >> /etc/systemd/system/kubelet.service.d/20-cloud-provider.conf
+            systemctl daemon-reload
+          fi
+        else
+          echo "Skipping cloud-provider flag as Kubernetes version > 1.33.0" >> /var/log/prekubeadm.log
+        fi
       users:
       - lockPassword: false
         name: capiuser
