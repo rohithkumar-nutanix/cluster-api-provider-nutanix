@@ -190,6 +190,12 @@ func initializeConfig(opts *options) (*managerConfig, error) {
 	if metricsServerOpts == nil {
 		return nil, errors.New("parsed manager options are nil")
 	}
+
+	// Configure metrics server to use secure serving with authentication and authorization
+	// Don't modify the BindAddress as it's already set by the CAPI flags
+	metricsServerOpts.SecureServing = true
+	metricsServerOpts.FilterProvider = server.WithAuthenticationAndAuthorization
+
 	config.metricsServerOpts = *metricsServerOpts
 
 	config.concurrentReconcilesNutanixCluster = opts.maxConcurrentReconciles

@@ -46,5 +46,5 @@ labels:
 - includeSelectors: true
   pairs:
     cluster.x-k8s.io/provider: infrastructure-nutanix
-patches:
-- path: manager_auth_proxy_patch.yaml
+# Auth proxy patch removed as gcr.io/kubebuilder/kube-rbac-proxy is deprecated
+# and will be unavailable from early 2025
