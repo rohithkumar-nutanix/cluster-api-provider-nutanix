@@ -45,6 +45,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	infrav1 "github.com/nutanix-cloud-native/cluster-api-provider-nutanix/api/v1beta1"
@@ -331,9 +332,14 @@ func runManager(ctx context.Context, mgr manager.Manager, config *managerConfig)
 }
 
 func initializeManager(config *managerConfig) (manager.Manager, error) {
+	// Configure the metrics server to use authentication and authorization
+	metricsOptions := config.metricsServerOpts
+	// Enable secure metrics with authentication and authorization
+	metricsOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
+
 	mgr, err := ctrl.NewManager(config.restConfig, ctrl.Options{
 		Scheme:                 scheme,
-		Metrics:                config.metricsServerOpts,
+		Metrics:                metricsOptions,
 		HealthProbeBindAddress: config.healthProbeAddr,
 		LeaderElection:         config.enableLeaderElection,
 		LeaderElectionID:       "f265110d.cluster.x-k8s.io",
