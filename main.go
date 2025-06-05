@@ -192,6 +192,7 @@ func initializeConfig(opts *options) (*managerConfig, error) {
 		return nil, errors.New("parsed manager options are nil")
 	}
 	config.metricsServerOpts = *metricsServerOpts
+	config.metricServerOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
 
 	config.concurrentReconcilesNutanixCluster = opts.maxConcurrentReconciles
 	config.concurrentReconcilesNutanixMachine = opts.maxConcurrentReconciles
@@ -332,14 +333,9 @@ func runManager(ctx context.Context, mgr manager.Manager, config *managerConfig)
 }
 
 func initializeManager(config *managerConfig) (manager.Manager, error) {
-	// Configure the metrics server to use authentication and authorization
-	metricsOptions := config.metricsServerOpts
-	// Enable secure metrics with authentication and authorization
-	metricsOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
-
 	mgr, err := ctrl.NewManager(config.restConfig, ctrl.Options{
 		Scheme:                 scheme,
-		Metrics:                metricsOptions,
+		Metrics:                config.metricsServerOpts,
 		HealthProbeBindAddress: config.healthProbeAddr,
 		LeaderElection:         config.enableLeaderElection,
 		LeaderElectionID:       "f265110d.cluster.x-k8s.io",
