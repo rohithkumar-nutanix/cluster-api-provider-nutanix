@@ -190,8 +190,7 @@ func initializeConfig(opts *options) (*managerConfig, error) {
 	if metricsServerOpts == nil {
 		return nil, errors.New("parsed manager options are nil")
 	}
-
-
+    metricsServerOpts.FilterProvider= capiflags.WithAuthenticationAndAuthorization
 	config.metricsServerOpts = *metricsServerOpts
 
 	config.concurrentReconcilesNutanixCluster = opts.maxConcurrentReconciles
